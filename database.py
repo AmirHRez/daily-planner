@@ -87,7 +87,7 @@ class DailyPlannerDB:
 
             conn.commit()
 
-    #### Daily Plans CRUD ####
+    #### Day CRUD ####
     # CREATE
     def create_day(
         self,
@@ -147,7 +147,7 @@ class DailyPlannerDB:
             row = cursor.fetchone()
             return dict(row) if row else None
 
-    # TODO: UPDATE
+    # UPDATE
     def update_day(
         self,
         date_str: str,
@@ -156,7 +156,7 @@ class DailyPlannerDB:
         wasted_time: str = "",
         went_well: str = "",
         adjustment: str = "",
-    ):
+    ) -> bool:
         """Upadate a day's plan by date"""
 
         if sleep_hours is not None and not (0 <= sleep_hours <= 24):
@@ -198,8 +198,16 @@ class DailyPlannerDB:
                 f"""UPDATE days SET {", ".join(updates)} WHERE date = ?""",
                 (params),
             )
+            conn.commit()
+            return cursor.rowcount > 0
 
-    # TODO: DELETE
+    # DELETE
+    def delete_day(self, date_str: str):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""DELETE FROM days WHERE date = ?""", date_str)
+
+            conn.commit()
 
     #### Tasks ####
     # TODO: CREATE
