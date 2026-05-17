@@ -1,0 +1,54 @@
+CREATE TABLE days (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE NOT NULL,
+
+    sleep_hours REAL,
+    energy INTEGER,
+
+    went_well TEXT,
+    wasted_time TEXT,
+    adjustment TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day_id INTEGER NOT NULL,
+
+    title TEXT NOT NULL,
+    priority TEXT,
+    effort_hours REAL,
+
+    deep_work INTEGER DEFAULT 0,
+    done INTEGER DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(day_id) REFERENCES days(id)
+);
+
+CREATE TABLE habits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    active INTEGER DEFAULT 1,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE habit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    day_id INTEGER NOT NULL,
+    habit_id INTEGER NOT NULL,
+
+    done INTEGER DEFAULT 0,
+
+    FOREIGN KEY(day_id) REFERENCES days(id),
+    FOREIGN KEY(habit_id)
+        REFERENCES habits(id)
+);
+
