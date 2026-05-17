@@ -26,7 +26,6 @@ class Task:
     text: str
     priority: str  # single letter A-Z
     effort: Optional[float]
-    is_top3: bool
     is_deep: bool
     done: bool
 

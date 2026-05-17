@@ -13,9 +13,9 @@ INSERT OR IGNORE INTO habits (name) VALUES
 
 CREATE TABLE IF NOT EXISTS days (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    date        TEXT    NOT NULL UNIQUE,  -- 'YYYY-MM-DD'
+    date        TEXT    NOT NULL UNIQUE,
     sleep_hours REAL,
-    energy      INTEGER,                  -- 1-10
+    energy      INTEGER,                  
     went_well   TEXT,
     wasted_time TEXT,
     adjustment  TEXT
@@ -25,9 +25,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     day_id     INTEGER NOT NULL REFERENCES days(id) ON DELETE CASCADE,
     text       TEXT    NOT NULL,
-    priority   TEXT    NOT NULL DEFAULT 'C',  -- single letter A-Z
-    effort     REAL,                           -- hours, optional
-    is_top3    INTEGER NOT NULL DEFAULT 0,
+    priority   TEXT    NOT NULL DEFAULT 'C',
+    effort     REAL,
     is_deep    INTEGER NOT NULL DEFAULT 0,
     done       INTEGER NOT NULL DEFAULT 0
 );

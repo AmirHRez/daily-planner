@@ -1,231 +1,177 @@
 import sqlite3
-from pathlib import Path
-from datetime import date, datetime
-from typing import Optional, List, Dict, Any, Tuple
+from datetime import date
+from typing import Optional
+from models import Day, Habit, HabitLogEntry, Task
 
 
-class DailyPlannerDB:
-    """Complete CRUD operations for Daily Planner"""
-
+class DatabaseManager:
     def __init__(self, db_path: str = "data/planner.db"):
-        """Initialize database connection and create tables if not exist"""
-        Path("data").mkdir(exist_ok=True)
-        self.db_path = Path("data") / Path(db_path).name
-        self._init_tables()
+        self.conn = sqlite3.connect(db_path)
+        self.conn.row_factory = sqlite3.Row
+        self.conn.execute("PRAGMA foreign_keys = ON")
+        self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
-        """Get a database connection with row factory for dict-like rows"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        # Activates foreign keys
-        conn.execute("PRAGMA foreign_keys = ON")
-        return conn
+    def _init_db(self):
+        with open("schema.sql") as f:
+            self.conn.executescript(f.read())
+        self.conn.commit()
 
-    def _init_tables(self) -> None:
-        """Create all tables with proper schema"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
+    def close(self):
+        self.conn.close()
 
-            # Tables
-            cursor.executescript("""
-                CREATE TABLE days (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    date TEXT UNIQUE NOT NULL,
+    def get_or_create_day(self, target_date: date) -> Day:
+        row = self.conn.execute(
+            "SELECT * FROM days WHERE date = ?", (target_date.isoformat(),)
+        ).fetchone()
 
-                    sleep_hours REAL,
-                    energy INTEGER,
+        if row is None:  # create
+            self.conn.execute(
+                "INSERT INTO days (date) VALUES (?)", (target_date.isoformat(),)
+            )
 
-                    went_well TEXT,
-                    wasted_time TEXT,
-                    adjustment TEXT,
+            # seed habit log
+            day_id = self.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            habits = self.conn.execute(
+                "SELECT id FROM habits WHERE active = 1"
+            ).fetchall()
+            self.conn.executemany(
+                "INSERT OR IGNORE INTO habit_log (day_id, habit_id) VALUES (?, ?)",
+                [(day_id, h["id"]) for h in habits],
+            )
+            self.conn.commit()
+            row = self.conn.execute(
+                "SELECT * FROM days WHERE id = ?", (day_id,)
+            ).fetchone()
 
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
+        day = Day(
+            id=row["id"],
+            date=date.fromisoformat(row["date"]),
+            sleep_hours=row["sleep_hours"],
+            energy=row["energy"],
+            went_well=row["went_well"],
+            wasted_time=row["wasted_time"],
+            adjustment=row["adjustment"],
+        )
+        day.tasks = self.get_tasks(day.id)
+        day.habits = self.get_habit_log(day.id)
+        return day
 
-                CREATE TABLE tasks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    day_id INTEGER NOT NULL,
+    def update_day(self, day_id: int, **kwargs):
+        allowed = {"sleep_hours", "energy", "went_well", "wasted_time", "adjustment"}
+        fields = {k: v for k, v in kwargs.items() if k in allowed}
+        if not fields:
+            return
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
+        self.conn.execute(
+            f"UPDATE days SET {set_clause} WHERE id = ?", (*fields.values(), day_id)
+        )
+        self.conn.commit()
 
-                    title TEXT NOT NULL,
-                    priority TEXT,
-                    effort_hours REAL,
+    def get_tasks(self, day_id: int) -> list[Task]:
+        rows = self.conn.execute(
+            "SELECT * FROM tasks WHERE day_id = ? ORDER BY priority, id", (day_id,)
+        ).fetchall()
+        return [
+            Task(
+                id=r["id"],
+                day_id=r["day_id"],
+                text=r["text"],
+                priority=r["priority"],
+                effort=r["effort"],
+                is_deep=bool(r["is_deep"]),
+                done=bool(r["done"]),
+            )
+            for r in rows
+        ]
 
-                    deep_work INTEGER DEFAULT 0,
-                    done INTEGER DEFAULT 0,
-
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-                    FOREIGN KEY(day_id) REFERENCES days(id)
-                );
-
-                CREATE TABLE habits (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    active INTEGER DEFAULT 1,
-
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE habit_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-                    day_id INTEGER NOT NULL,
-                    habit_definition_id INTEGER NOT NULL,
-
-                    done INTEGER DEFAULT 0,
-
-                    FOREIGN KEY(day_id) REFERENCES days(id),
-                    FOREIGN KEY(habit_definition_id)
-                        REFERENCES habit_definitions(id)
-                );
-            """)
-
-            # TODO: Create indexes for performance
-
-            conn.commit()
-
-    #### Day CRUD ####
-    # CREATE
-    def create_day(
+    def add_task(
         self,
-        date_str: str,
-        sleep_hours: Optional[float] = None,
-        energy: Optional[int] = None,
-        wasted_time: str = "",
-        went_well: str = "",
-        adjustment: str = "",
-    ) -> int:
-        """
-        Create a new daily plan (day) entry.
-        Returns the ID of the created record.
-        """
-        if energy is not None and not (1 <= energy <= 10):
-            raise ValueError("Energy must be between 1 and 10")
-        if sleep_hours is not None and not (0 <= sleep_hours <= 24):
-            raise ValueError("Sleep hours must be between 0 and 24")
+        day_id: int,
+        text: str,
+        priority: str = "C",
+        effort: Optional[float] = None,
+        is_deep: bool = False,
+    ) -> Task:
+        cur = self.conn.execute(
+            "INSERT INTO tasks (day_id, text, priority, effort, is_deep) VALUES (?, ?, ?, ?, ?)",
+            (day_id, text, priority.upper(), effort, int(is_deep)),
+        )
+        self.conn.commit()
+        row = self.conn.execute(
+            "SELECT * FROM tasks WHERE id = ?", (cur.lastrowid,)
+        ).fetchone()
+        return Task(
+            id=row["id"],
+            day_id=row["day_id"],
+            text=row["text"],
+            priority=row["priority"],
+            effort=row["effort"],
+            is_deep=bool(row["is_deep"]),
+            done=bool(row["done"]),
+        )
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO daily_plan (date, sleep_hours, energy, went_well, wasted_time, adjustment)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """,
-                (date_str, sleep_hours, energy, went_well, wasted_time, adjustment),
+    def update_task(self, task_id: int, **kwargs):
+        allowed = {"text", "priority", "effort", "is_deep", "done"}
+        fields = {k: v for k, v in kwargs.items() if k in allowed}
+        if not fields:
+            return
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
+        self.conn.execute(
+            f"UPDATE tasks SET {set_clause} WHERE id = ?", (*fields.values(), task_id)
+        )
+        self.conn.commit()
+
+    def delete_task(self, task_id: int):
+        self.conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        self.conn.commit()
+
+    def get_habits(self) -> list[Habit]:
+        rows = self.conn.execute("SELECT * FROM habits ORDER BY id").fetchall()
+        return [
+            Habit(id=r["id"], name=r["name"], active=bool(r["active"])) for r in rows
+        ]
+
+    def add_habit(self, name: str) -> Habit:
+        cur = self.conn.execute("INSERT INTO habits (name) VALUES (?)", (name,))
+        self.conn.commit()
+        row = self.conn.execute(
+            "SELECT * FROM habits WHERE id = ?", (cur.lastrowid,)
+        ).fetchone()
+        return Habit(id=row["id"], name=row["name"], active=bool(row["active"]))
+
+    def set_habit_active(self, habit_id: int, active: bool):
+        self.conn.execute(
+            "UPDATE habits SET active = ? WHERE id = ?", (int(active), habit_id)
+        )
+        self.conn.commit()
+
+    def get_habit_log(self, day_id: int) -> list[HabitLogEntry]:
+        rows = self.conn.execute(
+            """SELECT hl.*, h.name AS habit_name FROM habit_log hl
+               JOIN habits h ON h.id = hl.habit_id
+               WHERE hl.day_id = ? ORDER BY h.id""",
+            (day_id,),
+        ).fetchall()
+        return [
+            HabitLogEntry(
+                id=r["id"],
+                day_id=r["day_id"],
+                habit_id=r["habit_id"],
+                habit_name=r["habit_name"],
+                done=bool(r["done"]),
             )
-            conn.commit()
-            return cursor.lastrowid
+            for r in rows
+        ]
 
-    # READ
-    def get_day(self, date_str: str) -> Optional[Dict[str, Any]]:
-        """Get a daily plan by date. Returns None if not found"""
-
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT * FROM days WHERE date = ?
-            """,
-                (date_str),
-            )
-            row = cursor.fetchone()
-            return dict(row) if row else None
-
-    def get_day_by_id(self, id: int) -> Optional[Dict[str, Any]]:
-        """Get a daily plan by id. Returns None if not found"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT * FROM day WHERE id = ?
-            """,
-                (id),
-            )
-            row = cursor.fetchone()
-            return dict(row) if row else None
-
-    # UPDATE
-    def update_day(
-        self,
-        date_str: str,
-        sleep_hours: Optional[float] = None,
-        energy: Optional[int] = None,
-        wasted_time: str = "",
-        went_well: str = "",
-        adjustment: str = "",
-    ) -> bool:
-        """Upadate a day's plan by date"""
-
-        if sleep_hours is not None and not (0 <= sleep_hours <= 24):
-            raise ValueError("Sleep hours must be between 0 and 24")
-        if sleep_hours is not None and not (0 <= sleep_hours <= 24):
-            raise ValueError("Sleep hours must be between 0 and 24")
-
-        updates = []
-        params = []
-        if sleep_hours is not None:
-            updates.append("sleep_hours")
-            params.append(sleep_hours)
-
-        if energy is not None:
-            updates.append("enerhy")
-            params.append(energy)
-
-        if wasted_time is not None:
-            updates.append("wasted_time")
-            params.append(wasted_time)
-
-        if adjustment is not None:
-            updates.append("adjustment")
-            params.append(adjustment)
-
-        if went_well is not None:
-            updates.append("went_well")
-            params.append(went_well)
-
-        if not updates:
-            return True  # Nothing
-
-        updates.append("updated_at = CURRENT_TIMESTAMP")
-        params.append(date_str)
-
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                f"""UPDATE days SET {", ".join(updates)} WHERE date = ?""",
-                (params),
-            )
-            conn.commit()
-            return cursor.rowcount > 0
-
-    # DELETE
-    def delete_day(self, date_str: str):
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""DELETE FROM days WHERE date = ?""", date_str)
-
-            conn.commit()
-
-    #### Tasks ####
-    # TODO: CREATE
-    # TODO: READ
-    # TODO: UPDATE
-    # TODO: DELETE
-
-    #### Habits ####
-    # TODO: CREATE
-    # TODO: READ
-    # TODO: UPDATE
-    # TODO: DELETE
-
-    @staticmethod
-    def _get_day_name(date_str: str) -> str:
-        """Convert YYYY-MM-DD to day name (e.g., 'Monday')."""
-        try:
-            d = datetime.strptime(date_str, "%Y-%m-%d")
-            return d.strftime("%A")
-        except ValueError:
-            return ""
+    def toggle_habit(self, day_id: int, habit_id: int) -> bool:
+        row = self.conn.execute(
+            "SELECT done FROM habit_log WHERE day_id = ? AND habit_id = ?",
+            (day_id, habit_id),
+        ).fetchone()
+        new_state = not bool(row["done"])
+        self.conn.execute(
+            "UPDATE habit_log SET done = ? WHERE day_id = ? AND habit_id = ?",
+            (int(new_state), day_id, habit_id),
+        )
+        self.conn.commit()
+        return new_state
