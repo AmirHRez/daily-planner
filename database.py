@@ -51,6 +51,8 @@ class DatabaseManager:
             went_well=row["went_well"],
             wasted_time=row["wasted_time"],
             adjustment=row["adjustment"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
         )
         day.tasks = self.get_tasks(day.id)
         day.habits = self.get_habit_log(day.id)
@@ -62,6 +64,8 @@ class DatabaseManager:
         if not fields:
             return
         set_clause = ", ".join(f"{k} = ?" for k in fields)
+        set_clause += ", updated_at = CURRENT_TIMESTAMP"
+
         self.conn.execute(
             f"UPDATE days SET {set_clause} WHERE id = ?", (*fields.values(), day_id)
         )
@@ -73,15 +77,17 @@ class DatabaseManager:
         ).fetchall()
         return [
             Task(
-                id=r["id"],
-                day_id=r["day_id"],
-                text=r["text"],
-                priority=r["priority"],
-                effort=r["effort"],
-                is_deep=bool(r["is_deep"]),
-                done=bool(r["done"]),
+                id=row["id"],
+                day_id=row["day_id"],
+                text=row["text"],
+                priority=row["priority"],
+                effort=row["effort"],
+                is_deep=bool(row["is_deep"]),
+                done=bool(row["done"]),
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
             )
-            for r in rows
+            for row in rows
         ]
 
     def add_task(
@@ -108,6 +114,8 @@ class DatabaseManager:
             effort=row["effort"],
             is_deep=bool(row["is_deep"]),
             done=bool(row["done"]),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
         )
 
     def update_task(self, task_id: int, **kwargs):
@@ -116,6 +124,8 @@ class DatabaseManager:
         if not fields:
             return
         set_clause = ", ".join(f"{k} = ?" for k in fields)
+        set_clause += ", updated_at = CURRENT_TIMESTAMP"
+
         self.conn.execute(
             f"UPDATE tasks SET {set_clause} WHERE id = ?", (*fields.values(), task_id)
         )
