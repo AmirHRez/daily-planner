@@ -18,13 +18,7 @@ from tui.actions import (
     action_reflect,
     action_toggle_habit,
 )
-from tui.screens import (
-    screen_plan,
-    screen_reflect,
-    screen_today,
-    screen_history_view,
-    screen_history_browser,
-)
+from tui.screens import ScreenManager
 
 os.makedirs("data", exist_ok=True)
 
@@ -35,6 +29,7 @@ console = Console(theme=THEME, highlight=False)
 def main():
     db = DatabaseManager()
     current_date = date.today()
+    screens = ScreenManager(console)
 
     try:
         while True:
@@ -44,11 +39,11 @@ def main():
 
             # ── render ──
             if mode == "plan":
-                screen_plan(day, current_date)
+                screens.screen_plan(day, current_date)
             elif mode == "today":
-                screen_today(day, current_date)
+                screens.screen_today(day, current_date)
             else:
-                screen_reflect(day, current_date)
+                screens.screen_reflect(day, current_date)
 
             console.print()
             try:
@@ -70,7 +65,7 @@ def main():
 
             # history browser (capital H)
             elif key == "H" or k in ("history", "hist"):
-                picked = screen_history_browser(db)
+                picked = screens.screen_history_browser(db)
                 if picked:
                     current_date = picked
 
