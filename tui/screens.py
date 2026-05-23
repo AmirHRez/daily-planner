@@ -10,7 +10,7 @@ from rich.prompt import Prompt
 from rich.rule import Rule
 from typing import Optional
 
-from tui.helpers import clr, mode_badge
+from tui.helpers import mode_badge
 from tui.panels import panel_top3, panel_tasks, panel_habits, panel_reflection
 
 
@@ -57,7 +57,7 @@ class ScreenManager:
         self.console.print()
 
     def screen_plan(self, day, current_date: date):
-        clr()
+        self.console.clear()
         self.render_header(current_date, "plan")
         self.console.print(
             Align.center(
@@ -90,7 +90,7 @@ class ScreenManager:
         bar_t = "█" * (pct_t // 10) + "░" * (10 - pct_t // 10)
         bar_h = "█" * (pct_h // 10) + "░" * (10 - pct_h // 10)
 
-        clr()
+        self.console.clear()
         self.render_header(current_date, "today")
 
         sg = Table.grid(expand=True, padding=(0, 3))
@@ -122,7 +122,7 @@ class ScreenManager:
         )
 
     def screen_reflect(self, day, current_date: date):
-        clr()
+        self.console.clear()
         self.render_header(current_date, "reflect")
         self.console.print(
             Columns(
@@ -156,7 +156,7 @@ class ScreenManager:
         )
 
     def screen_history_view(self, day, current_date: date):
-        clr()
+        self.console.clear()
         self.render_header(current_date, "history")
         self.console.print(
             Columns(
@@ -186,7 +186,7 @@ class ScreenManager:
 
     # FIXME: Remove DB logic
     def screen_history_browser(self, db: DatabaseManager) -> Optional[date]:
-        clr()
+        self.console.clear()
         self.console.print()
         self.console.print(
             Rule("  HISTORY — last 30 days  ", style="#D6D3D1", characters="═")

@@ -4,23 +4,16 @@ from rich.console import Console
 from rich.rule import Rule
 from rich.text import Text
 
-from config import THEME, ENERGY_MAP, PRIORITY_STYLE
+from config import ENERGY_MAP, PRIORITY_STYLE
 import constants as const
 
-# FIXME: Use dependency injection for console
-console = Console(theme=THEME, highlight=False)
 
-
-def clr():
-    console.clear()
-
-
-def pause(msg: str = "Enter to continue…"):
+def pause(console: Console, msg: str = "Enter to continue…"):
     console.print()
     console.input(f"  [muted]{msg}[/]  ")
 
 
-def divider(label: str = ""):
+def divider(console: Console, label: str = ""):
     if label:
         console.print(Rule(f"  {label}  ", style="#D6D3D1", characters="─"))
     else:

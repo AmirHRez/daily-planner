@@ -13,7 +13,7 @@ console = Console(theme=THEME, highlight=False)
 
 def action_add_task(db, day):
     console.print()
-    divider("ADD TASK")
+    divider(console, "ADD TASK")
     text = Prompt.ask("  [prompt]Description[/]").strip()
     if not text:
         return
@@ -26,16 +26,16 @@ def action_add_task(db, day):
     is_deep = Confirm.ask("  [prompt]Deep work?[/]", default=False)
     db.add_task(day.id, text, priority=priority, effort=effort, is_deep=is_deep)
     console.print("  [success]✓ Task added.[/]")
-    pause()
+    pause(console)
 
 
 def action_edit_task(db, day):
     if not day.tasks:
         console.print("  [muted]No tasks.[/]")
-        pause()
+        pause(console)
         return
     console.print()
-    divider("EDIT TASK")
+    divider(console, "EDIT TASK")
     for i, t in enumerate(day.tasks, 1):
         console.print(f"  [muted]{i}.[/]  {t.text}  [muted][{t.priority}][/]")
     raw = Prompt.ask("  [prompt]Task #[/] [muted](blank cancel)[/]", default="").strip()
@@ -45,7 +45,7 @@ def action_edit_task(db, day):
         task = day.tasks[int(raw) - 1]
     except (ValueError, IndexError):
         console.print("  [danger]Invalid.[/]")
-        pause()
+        pause(console)
         return
     text = (
         Prompt.ask("  [prompt]Description[/]", default=task.text).strip() or task.text
@@ -62,16 +62,16 @@ def action_edit_task(db, day):
         task.id, text=text, priority=priority, effort=effort, is_deep=int(is_deep)
     )
     console.print("  [success]✓ Updated.[/]")
-    pause()
+    pause(console)
 
 
 def action_done_task(db, day):
     if not day.tasks:
         console.print("  [muted]No tasks.[/]")
-        pause()
+        pause(console)
         return
     console.print()
-    divider("MARK DONE / UNDONE")
+    divider(console, "MARK DONE / UNDONE")
     for i, t in enumerate(day.tasks, 1):
         mark = "[success]✓[/]" if t.done else "[muted]☐[/]"
         console.print(f"  {mark}  [muted]{i}.[/]  {t.text}")
@@ -86,16 +86,16 @@ def action_done_task(db, day):
         console.print(f"  Marked {state}")
     except (ValueError, IndexError):
         console.print("  [danger]Invalid.[/]")
-    pause()
+    pause(console)
 
 
 def action_delete_task(db, day):
     if not day.tasks:
         console.print("  [muted]No tasks.[/]")
-        pause()
+        pause(console)
         return
     console.print()
-    divider("DELETE TASK")
+    divider(console, "DELETE TASK")
     for i, t in enumerate(day.tasks, 1):
         console.print(f"  [muted]{i}.[/]  {t.text}")
     raw = Prompt.ask("  [prompt]Task #[/] [muted](blank cancel)[/]", default="").strip()
@@ -108,16 +108,16 @@ def action_delete_task(db, day):
             console.print("  [success]✓ Deleted.[/]")
     except (ValueError, IndexError):
         console.print("  [danger]Invalid.[/]")
-    pause()
+    pause(console)
 
 
 def action_toggle_habit(db, day):
     if not day.habits:
         console.print("  [muted]No habits.[/]")
-        pause()
+        pause(console)
         return
     console.print()
-    divider("TOGGLE HABIT")
+    divider(console, "TOGGLE HABIT")
     for i, h in enumerate(day.habits, 1):
         mark = "[habit.yes]✓[/]" if h.done else "[muted]☐[/]"
         console.print(f"  {mark}  [muted]{i}.[/]  {h.habit_name}")
@@ -133,12 +133,12 @@ def action_toggle_habit(db, day):
         console.print(f"  {h.habit_name}  →  {st}")
     except (ValueError, IndexError):
         console.print("  [danger]Invalid.[/]")
-    pause()
+    pause(console)
 
 
 def action_reflect(db, day):
     console.print()
-    divider("REFLECTION")
+    divider(console, "REFLECTION")
 
     sleep_s = Prompt.ask(
         "  [prompt]Sleep hours[/]",
@@ -180,4 +180,4 @@ def action_reflect(db, day):
     )
     console.print()
     console.print("  [success]✓ Reflection saved.[/]")
-    pause()
+    pause(console)

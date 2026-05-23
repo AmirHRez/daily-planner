@@ -9,7 +9,7 @@ from rich.text import Text
 
 from config import THEME
 from database import DatabaseManager
-from tui.helpers import day_mode, clr
+from tui.helpers import day_mode
 from tui.actions import (
     action_add_task,
     action_delete_task,
@@ -93,7 +93,7 @@ def main():
 
     finally:
         db.close()
-        clr()
+        console.clear()
         console.print()
         console.print(
             Align.center(
