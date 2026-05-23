@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from typing import Optional
 
 
@@ -24,12 +24,12 @@ class Task:
     id: int
     day_id: int
     text: str
-    priority: str  # single letter A-Z
+    priority: str
     effort: Optional[float]
     is_deep: bool
     done: bool
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 @dataclass
@@ -41,7 +41,7 @@ class Day:
     went_well: Optional[str]
     wasted_time: Optional[str]
     adjustment: Optional[str]
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     tasks: list[Task] = field(default_factory=list)
     habits: list[HabitLogEntry] = (field(default_factory=list),)
-    created_at: datetime
-    updated_at: datetime
