@@ -12,7 +12,7 @@ class DatabaseManager:
         self._init_db()
 
     def _init_db(self):
-        with open("schema.sql") as f:
+        with open("data/schema.sql") as f:
             self.conn.executescript(f.read())
         self.conn.commit()
 
