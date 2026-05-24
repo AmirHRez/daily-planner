@@ -1,7 +1,10 @@
 import sqlite3
 from datetime import date
 from typing import Optional
+from pathlib import Path
 from models import Day, Habit, HabitLogEntry, Task
+
+_SCHEMA = Path(__file__).parent / "schema.sql"
 
 
 class DatabaseManager:
@@ -12,7 +15,7 @@ class DatabaseManager:
         self._init_db()
 
     def _init_db(self):
-        with open("data/schema.sql") as f:
+        with open(_SCHEMA) as f:
             self.conn.executescript(f.read())
         self.conn.commit()
 

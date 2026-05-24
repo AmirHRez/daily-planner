@@ -1,49 +1,41 @@
 import os
 import time
 from datetime import date, timedelta
-from rich.align import Align
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.text import Text
 
-from config import THEME
-from database import DatabaseManager
-from tui.helpers import day_mode
-from tui.actions import (
-    action_add_task,
-    action_delete_task,
-    action_done_task,
-    action_edit_task,
-    action_reflect,
-    action_toggle_habit,
-)
+from tui.config import THEME
+from data.database import DatabaseManager
+
 from tui.screens import ScreenManager
+from planner_services import PlannerService
+from tui.actions import ActionHandler
 
 os.makedirs("data", exist_ok=True)
 
 
-console = Console(theme=THEME, highlight=False)
-
-
-def main():
+def run():
     db = DatabaseManager()
     current_date = date.today()
-    screens = ScreenManager(console)
+
+    console = Console(theme=THEME, highlight=False)
+    service = PlannerService(db)
+    screens = ScreenManager(console, service)
+    actions = ActionHandler(console, service)
 
     try:
         while True:
             today = date.today()
-            mode = day_mode(current_date)
-            day = db.get_or_create_day(current_date)
+            mode = service.day_mode(current_date)
+            day = service.get_or_create_day(current_date)
 
             # ── render ──
             if mode == "plan":
-                screens.screen_plan(day, current_date)
+                screens.plan(day, current_date)
             elif mode == "today":
-                screens.screen_today(day, current_date)
+                screens.today(day, current_date)
             else:
-                screens.screen_reflect(day, current_date)
+                screens.reflect(day, current_date)
 
             console.print()
             try:
@@ -65,27 +57,27 @@ def main():
 
             # history browser (capital H)
             elif key == "H" or k in ("history", "hist"):
-                picked = screens.screen_history_browser(db)
+                picked = screens.history_browser()
                 if picked:
                     current_date = picked
 
             # task actions
             elif k == "a":
-                action_add_task(db, day)
+                actions.add_task(day)
             elif k == "e":
-                action_edit_task(db, day)
+                actions.edit_task(day)
             elif k == "x":
-                action_delete_task(db, day)
+                actions.delete_task(day)
             elif k == "d":
-                action_done_task(db, day)
+                actions.done_task(day)
 
             # habit toggle
             elif k == "h":
-                action_toggle_habit(db, day)
+                actions.toggle_habit(day)
 
             # reflection
             elif k == "r":
-                action_reflect(db, day)
+                actions.reflect(day)
 
             elif k:
                 console.print(f"  [muted]Unknown command: {k!r}[/]")
@@ -93,19 +85,4 @@ def main():
 
     finally:
         db.close()
-        console.clear()
-        console.print()
-        console.print(
-            Align.center(
-                Panel(
-                    Text(
-                        "\n  Good work. See you tomorrow.  \n",
-                        style="rust.bold",
-                        justify="center",
-                    ),
-                    border_style="#C0392B",
-                    padding=(1, 6),
-                )
-            )
-        )
-        console.print()
+        screens.farewell()

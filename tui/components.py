@@ -1,16 +1,67 @@
+from datetime import date
+from typing import Optional
+from rich.align import Align
+from rich.columns import Columns
+from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
+from rich.rule import Rule
 from rich.table import Table
-from tui.helpers import priority_text, energy_str, sleep_display
+from rich.text import Text
+
+from models import Day
+from tui.config import ENERGY_MAP, PRIORITY_STYLE
+from constants import IDEAL_SLEEP_HOURS
 
 
-def panel_top3(day) -> Panel:
-    top3 = sorted([t for t in day.tasks if t.priority == "A"], key=lambda t: t.id)[:3]
+def energy_str(e: Optional[int]) -> str:
+    return ENERGY_MAP.get(e, "—") if e else "—"
+
+
+def sleep_display(h: Optional[float]) -> str:
+    if h is None:
+        return "—"
+    filled = min(IDEAL_SLEEP_HOURS, int(round(h)))
+    return "█" * filled + "░" * (10 - filled) + f"  {h}h"
+
+
+def priority_text(p: str) -> Text:
+    return Text(f"[{p.upper()}]", style=PRIORITY_STYLE.get(p.upper(), "prio.C"))
+
+
+def mode_badge(m: str) -> Text:
+    labels = {
+        "plan": "  PLAN TOMORROW  ",
+        "today": "  TODAY  ",
+        "reflect": "  REFLECT  ",
+        "history": "  HISTORY  ",
+    }
+    styles = {
+        "plan": "mode.plan",
+        "today": "mode.today",
+        "reflect": "mode.reflect",
+        "history": "mode.history",
+    }
+    return Text(labels.get(m, m.upper()), style=styles.get(m, ""))
+
+
+def cmds(*pairs) -> Text:
+    """Build a centred key-hint bar: [key] desc  [key] desc …"""
+    t = Text(justify="center")
+    for key, desc in pairs:
+        t.append(f"  [{key}]", style="rust")
+        t.append(f" {desc}  ", style="muted")
+    return t
+
+
+# Panels
+
+
+def panel_top3(day: Day, top3_tasks) -> Panel:
     rows = []
     for i in range(3):
         num = Text(f"  {i + 1}. ", style="rust")
-        if i < len(top3):
-            t = top3[i]
+        if i < len(top3_tasks):
+            t = top3_tasks[i]
             label = Text(t.text, style="done" if t.done else "bold")
         else:
             label = Text("·" * 44, style="ink.faint")
@@ -24,7 +75,7 @@ def panel_top3(day) -> Panel:
     )
 
 
-def panel_tasks(day, indexed: bool = True) -> Panel:
+def panel_tasks(day: Day, indexed: bool = True) -> Panel:
     tbl = Table(
         box=None, show_header=True, header_style="section", expand=True, padding=(0, 1)
     )
@@ -64,7 +115,7 @@ def panel_tasks(day, indexed: bool = True) -> Panel:
     )
 
 
-def panel_habits(day) -> Panel:
+def panel_habits(day: Day) -> Panel:
     lines = []
     if not day.habits:
         lines.append(Text("  No habits tracked.", style="muted"))
@@ -86,7 +137,7 @@ def panel_habits(day) -> Panel:
     )
 
 
-def panel_reflection(day) -> Panel:
+def panel_reflection(day: Day) -> Panel:
     grid = Table.grid(expand=True, padding=(0, 2))
     grid.add_column(style="section", width=24, no_wrap=True)
     grid.add_column(ratio=1)
@@ -107,3 +158,40 @@ def panel_reflection(day) -> Panel:
         border_style="#D6D3D1",
         padding=(1, 2),
     )
+
+
+# Header
+def render_header(console: Console, current_date: date, mode: str) -> None:
+    today = date.today()
+    badge = mode_badge(mode)
+    title = Text.assemble(
+        Text("DAILY PLANNER", style="bold"),
+        Text("   ·   ", style="muted"),
+        Text(current_date.strftime("%A").upper(), style="rust"),
+        Text("  ", style=""),
+        Text(current_date.strftime("%d %B %Y"), style="ink.light"),
+    )
+    delta = (current_date - today).days
+    if delta == 0:
+        rel = Text("  today", style="gold")
+    elif delta == 1:
+        rel = Text("  tomorrow", style="muted")
+    elif delta == -1:
+        rel = Text("  yesterday", style="muted")
+    else:
+        rel = Text(f"  {delta:+}d", style="muted")
+
+    nav = Text("b/← prev   n/→ next   t today   H history   q quit", style="muted")
+    console.print()
+    console.print(
+        Columns(
+            [
+                Align(Text.assemble(title, rel), vertical="middle"),
+                Align(badge, vertical="middle"),
+                Align(nav, vertical="middle"),
+            ],
+            expand=True,
+        )
+    )
+    console.print(Rule(style="#D6D3D1", characters="═"))
+    console.print()

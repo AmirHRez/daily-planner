@@ -44,4 +44,4 @@ class Day:
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     tasks: list[Task] = field(default_factory=list)
-    habits: list[HabitLogEntry] = (field(default_factory=list),)
+    habits: list[HabitLogEntry] = field(default_factory=list)

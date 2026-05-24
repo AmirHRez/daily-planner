@@ -1,3 +1,3 @@
-from tui.app import main
+from tui.app import run
 
-main()
+run()
