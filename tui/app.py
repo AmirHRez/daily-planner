@@ -29,7 +29,6 @@ def run():
             mode = service.day_mode(current_date)
             day = service.get_or_create_day(current_date)
 
-            # ── render ──
             if mode == "plan":
                 screens.plan(day, current_date)
             elif mode == "today":

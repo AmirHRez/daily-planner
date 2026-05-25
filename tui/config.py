@@ -9,7 +9,7 @@ THEME = Theme(
         "rust.bold": "bold #C0392B",
         "gold": "#B7791F",
         "done": "strike #A8A29E",
-        "undone": "#1C1917",
+        "undone": "#5F5B59",
         "prio.A": "bold #C0392B",
         "prio.B": "bold #B7791F",
         "prio.C": "#44403C",
