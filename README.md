@@ -5,7 +5,7 @@ A personal terminal-based daily planner built with Python and Rich. Plan tomorro
 - Python 3.10+
 
 ```bash
-pip install rich
+pip install -r requirements.txt
 ```
 
 ## How to run
