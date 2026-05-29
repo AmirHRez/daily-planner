@@ -68,7 +68,7 @@ def run():
             elif k == "x":
                 actions.delete_task(day)
             elif k == "d":
-                actions.done_task(day)
+                actions.toggle_done(day)
 
             # habit toggle
             elif k == "h":

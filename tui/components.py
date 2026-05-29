@@ -21,7 +21,7 @@ def sleep_display(h: Optional[float]) -> str:
     if h is None:
         return "—"
     filled = min(IDEAL_SLEEP_HOURS, int(round(h)))
-    return "█" * filled + "░" * (10 - filled) + f"  {h}h"
+    return "█" * filled + "░" * (IDEAL_SLEEP_HOURS - filled) + f"  {h}h"
 
 
 def priority_text(p: str) -> Text:
@@ -56,7 +56,7 @@ def cmds(*pairs) -> Text:
 # Panels
 
 
-def panel_top3(day: Day, top3_tasks) -> Panel:
+def panel_top3(top3_tasks) -> Panel:
     rows = []
     for i in range(3):
         num = Text(f"  {i + 1}. ", style="rust")

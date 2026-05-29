@@ -19,8 +19,8 @@ THEME = Theme(
         "danger": "#C0392B",
         "border": "#D6D3D1",
         "section": "bold #78716C",
-        "title.top3": "bold #C0392B",  # panel title: TOP 3
-        "title.tasks": "bold #78716C",  # panel title: TASKS
+        "title.top3": "bold #C0392B",
+        "title.tasks": "bold #78716C",
         "title.habits": "bold #78716C",
         "title.reflect": "bold #78716C",
         "muted": "#A8A29E",
