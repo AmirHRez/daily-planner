@@ -5,8 +5,6 @@ from rich.console import Console
 from rich.prompt import Prompt
 from tui.config import THEME
 from database import DatabaseManager
-from pathlib import Path
-
 from tui.screens import ScreenManager
 from planner_services import PlannerService
 from tui.actions import ActionHandler

@@ -1,7 +1,6 @@
 import sqlite3
 from datetime import date
 from typing import Optional
-from pathlib import Path
 from models import Day, Habit, HabitLogEntry, Task
 from constants import DB_PATH
 
