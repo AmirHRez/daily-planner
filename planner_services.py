@@ -121,5 +121,7 @@ class PlannerService:
         result = []
         for i in range(n):
             d = today - timedelta(days=i)
-            result.append((d, self._db.get_day(d)))
+            day = self._db.get_day(d)
+            if day:
+                result.append((d, day))
         return result
