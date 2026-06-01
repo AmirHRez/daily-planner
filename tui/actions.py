@@ -3,6 +3,7 @@ from rich.prompt import Confirm, Prompt
 from rich.rule import Rule
 from models import Day
 from planner_services import PlannerService
+from rich.prompt import FloatPrompt, IntPrompt
 
 
 class ActionHandler:
@@ -157,17 +158,17 @@ class ActionHandler:
         self._c.print()
         self._divider("REFLECTION")
 
-        sleep_s = Prompt.ask(
+        sleep = FloatPrompt.ask(
             "  [prompt]Sleep hours[/]",
-            default=str(day.sleep_hours) if day.sleep_hours else "",
-        ).strip()
-        sleep = float(sleep_s) if sleep_s else None
+            default=day.sleep_hours if day.sleep_hours else None,
+        )
 
         self._c.print("  [muted]1 drained · 2 low · 3 decent · 4 good · 5 peak[/]")
-        energy_s = Prompt.ask(
-            "  [prompt]Energy (1–5)[/]", default=str(day.energy) if day.energy else ""
-        ).strip()
-        energy = max(1, min(5, int(energy_s))) if energy_s else None
+        energy = IntPrompt.ask(
+            "  [prompt]Energy (1–5)[/]",
+            default=day.energy if day.energy else None,
+            choices=["1", "2", "3", "4", "5"],
+        )
 
         self._c.print()
         went_well = (

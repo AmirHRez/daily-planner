@@ -83,12 +83,12 @@ class PlannerService:
             :3
         ]
 
-    # ── Habits ────────────────────────────────────────────────────────────────
+    # Habits
 
     def toggle_habit(self, day_id: int, habit_id: int) -> bool:
         return self._db.toggle_habit(day_id, habit_id)
 
-    # ── Stats / aggregates ────────────────────────────────────────────────────
+    # Stats
 
     def day_stats(self, day: Day) -> dict:
         """Quick completion counts used by progress bars and history table."""

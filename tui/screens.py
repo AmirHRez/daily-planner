@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Optional
+import os
 from rich import box
 from rich.align import Align
 from rich.columns import Columns
@@ -26,7 +27,7 @@ class ScreenManager:
         self._svc = service
 
     def _clr(self):
-        self._c.clear()
+        os.system("cls" if os.name == "nt" else "clear")
 
     def _cmd_bar(self, *pairs) -> None:
         self._c.print(Panel(cmds(*pairs), border_style="#D6D3D1", padding=(0, 0)))
