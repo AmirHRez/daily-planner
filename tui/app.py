@@ -3,13 +3,14 @@ import time
 from datetime import date, timedelta
 from rich.console import Console
 from rich.prompt import Prompt
-
 from tui.config import THEME
-from data.database import DatabaseManager
+from database import DatabaseManager
+from pathlib import Path
 
 from tui.screens import ScreenManager
 from planner_services import PlannerService
 from tui.actions import ActionHandler
+from io_service import IOService
 
 os.makedirs("data", exist_ok=True)
 
@@ -22,6 +23,7 @@ def run():
     service = PlannerService(db)
     screens = ScreenManager(console, service)
     actions = ActionHandler(console, service)
+    io_service = IOService(db)
 
     try:
         while True:
@@ -59,6 +61,13 @@ def run():
                 picked = screens.history_browser()
                 if picked:
                     current_date = picked
+
+            # import / export  (capital X = export, capital I = import/restore)
+            elif key == "X":
+                io_service.export_json()
+                io_service.backup_json()
+            elif key == "I":
+                io_service.restore_json()
 
             # task actions
             elif k == "a":

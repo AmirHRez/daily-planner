@@ -3,12 +3,13 @@ from datetime import date
 from typing import Optional
 from pathlib import Path
 from models import Day, Habit, HabitLogEntry, Task
+from constants import DB_PATH
 
-_SCHEMA = Path(__file__).parent / "schema.sql"
+_SCHEMA = "schema.sql"
 
 
 class DatabaseManager:
-    def __init__(self, db_path: str = "data/planner.db"):
+    def __init__(self, db_path: str = DB_PATH):
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")

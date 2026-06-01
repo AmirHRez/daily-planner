@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from typing import Optional
-
-from data.database import DatabaseManager
+from database import DatabaseManager
 from models import Day, Task
 
 
