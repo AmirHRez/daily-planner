@@ -22,29 +22,44 @@ class DatabaseManager:
     def close(self):
         self.conn.close()
 
-    def get_or_create_day(self, target_date: date) -> Day:
+    def get_day(self, target_date: date) -> Optional[Day]:
         row = self.conn.execute(
             "SELECT * FROM days WHERE date = ?", (target_date.isoformat(),)
         ).fetchone()
 
-        if row is None:  # create
-            self.conn.execute(
-                "INSERT INTO days (date) VALUES (?)", (target_date.isoformat(),)
-            )
+        if row is None:
+            return None
 
-            # seed habit log
-            day_id = self.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-            habits = self.conn.execute(
-                "SELECT id FROM habits WHERE active = 1"
-            ).fetchall()
-            self.conn.executemany(
-                "INSERT OR IGNORE INTO habit_log (day_id, habit_id) VALUES (?, ?)",
-                [(day_id, h["id"]) for h in habits],
-            )
-            self.conn.commit()
-            row = self.conn.execute(
-                "SELECT * FROM days WHERE id = ?", (day_id,)
-            ).fetchone()
+        day = Day(
+            id=row["id"],
+            date=date.fromisoformat(row["date"]),
+            sleep_hours=row["sleep_hours"],
+            energy=row["energy"],
+            went_well=row["went_well"],
+            wasted_time=row["wasted_time"],
+            adjustment=row["adjustment"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+        day.tasks = self.get_tasks(day.id)
+        day.habits = self.get_habit_log(day.id)
+        return day
+
+    def create_day(self, target_date: str) -> Day:
+
+        self.conn.execute(
+            "INSERT INTO days (date) VALUES (?)", (target_date.isoformat(),)
+        )
+
+        # seed habit log
+        day_id = self.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        habits = self.conn.execute("SELECT id FROM habits WHERE active = 1").fetchall()
+        self.conn.executemany(
+            "INSERT OR IGNORE INTO habit_log (day_id, habit_id) VALUES (?, ?)",
+            [(day_id, h["id"]) for h in habits],
+        )
+        self.conn.commit()
+        row = self.conn.execute("SELECT * FROM days WHERE id = ?", (day_id,)).fetchone()
 
         day = Day(
             id=row["id"],

@@ -32,7 +32,6 @@ class ScreenManager:
     def _cmd_bar(self, *pairs) -> None:
         self._c.print(Panel(cmds(*pairs), border_style="#D6D3D1", padding=(0, 0)))
 
-    # Screens
     def plan(self, day: Day, current_date: date) -> None:
         self._clr()
         render_header(self._c, current_date, "plan")

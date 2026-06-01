@@ -11,7 +11,7 @@ class PlannerService:
 
     # Day
     def get_or_create_day(self, target_date: date) -> Day:
-        return self._db.get_or_create_day(target_date)
+        return self._db.get_day(target_date) or self._db.create_day(target_date)
 
     def day_mode(self, d: date) -> str:
         """Return 'plan', 'today', or 'history' for a given date."""
@@ -121,5 +121,5 @@ class PlannerService:
         result = []
         for i in range(n):
             d = today - timedelta(days=i)
-            result.append((d, self._db.get_or_create_day(d)))
+            result.append((d, self._db.get_day(d)))
         return result
