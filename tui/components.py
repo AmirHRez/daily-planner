@@ -181,7 +181,10 @@ def render_header(console: Console, current_date: date, mode: str) -> None:
     else:
         rel = Text(f"  {delta:+}d", style="muted")
 
-    nav = Text("b/← prev   n/→ next   t today   H history   q quit", style="muted")
+    nav = Text(
+        "b/← prev   n/→ next   t today   H history   X export   I import   q quit",
+        style="muted",
+    )
     console.print()
     console.print(
         Columns(
