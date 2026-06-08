@@ -1,7 +1,9 @@
+"""TODO: Update functions don't return the updated object. Make them so they do"""
+
 import sqlite3
 from datetime import date
 from typing import Optional
-from models import Day, Habit, HabitLogEntry, Task
+from models import Day, Habit, HabitLogEntry, Task, JournalEntry
 from constants import DB_PATH
 
 _SCHEMA = "schema.sql"
@@ -43,6 +45,7 @@ class DatabaseManager:
         )
         day.tasks = self.get_tasks(day.id)
         day.habits = self.get_habit_log(day.id)
+        day.journal_entries = self.get_journal_entries(day.id)
         return day
 
     def create_day(self, target_date: str) -> Day:
@@ -72,8 +75,9 @@ class DatabaseManager:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
-        day.tasks = self.get_tasks(day.id)
+        day.tasks = []
         day.habits = self.get_habit_log(day.id)
+        day.journal_entries = []
         return day
 
     def update_day(self, day_id: int, **kwargs):
@@ -203,3 +207,45 @@ class DatabaseManager:
         )
         self.conn.commit()
         return new_state
+
+    def get_journal_entries(self, day_id: int) -> list[JournalEntry]:
+        rows = self.conn.execute(
+            "SELECT * FROM journal_entries WHERE day_id = ? ORDER BY create_at",
+            (day_id,),
+        ).fetchall()
+        return [
+            JournalEntry(
+                id=row["id"],
+                day_id=row["day_id"],
+                title=row["title"],
+                body=row["body"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+            )
+            for row in rows
+        ]
+
+    def add_journal_entry(self, day_id: int, body: str, title: Optional[str] = None):
+        cur = self.conn.execute(
+            "INSERT INTO journal_entries (day_id, title, body) VALUES (?, ?, ?)",
+            (day_id, title, body),
+        )
+        self.conn.commit()
+        row = self.conn.execute(
+            "SELECT * FROM journal_entries WHERE id = ?", (cur.lastrowid,)
+        ).fetchone()
+        return Task(
+            id=row["id"],
+            day_id=row["day_id"],
+            title=row["title"],
+            body=row["body"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+
+    def update_journal_entry(self, entry_id: int, title: Optional[str], body: str):
+        self.conn.execute(
+            "UPDATE journal_entries SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (title, body, entry_id),
+        )
+        self.conn.commit()

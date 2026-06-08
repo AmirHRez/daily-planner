@@ -33,6 +33,16 @@ class Task:
 
 
 @dataclass
+class JournalEntry:
+    id: int
+    day_id: int
+    title: Optional[str]
+    body: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+@dataclass
 class Day:
     id: int
     date: date
@@ -44,4 +54,5 @@ class Day:
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     tasks: list[Task] = field(default_factory=list)
-    habits: list[HabitLogEntry] = field(default_factory=list)
+    habits: list[HabitLogEntry] = (field(default_factory=list),)
+    journal_entries: list[JournalEntry] = field(default_factory=list)
