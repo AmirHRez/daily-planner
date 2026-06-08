@@ -245,7 +245,12 @@ class DatabaseManager:
 
     def update_journal_entry(self, entry_id: int, title: Optional[str], body: str):
         self.conn.execute(
-            "UPDATE journal_entries SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            """UPDATE journal_entries SET title = ?, body = ?,
+            updated_at = CURRENT_TIMESTAMP WHERE id = ?""",
             (title, body, entry_id),
         )
+        self.conn.commit()
+
+    def delete_journal_entry(self, entry_id: int):
+        self.conn.execute("DELETE FROM journal_entries WHERE id = ?", (entry_id,))
         self.conn.commit()
