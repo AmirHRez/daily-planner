@@ -24,7 +24,8 @@ class IOService:
             day_id = day["id"]
 
             tasks = conn.execute(
-                "SELECT text, priority, effort, is_deep, done FROM tasks WHERE day_id = ? ORDER BY priority, id",
+                """SELECT text, priority, effort, is_deep, done
+                FROM tasks WHERE day_id = ? ORDER BY priority, id""",
                 (day_id,),
             ).fetchall()
 
@@ -33,6 +34,12 @@ class IOService:
                 JOIN habits h ON h.id = hl.habit_id
                 WHERE hl.day_id = ? ORDER BY h.id""",
                 (day_id,),
+            ).fetchall()
+
+            journal_entries = conn.execute(
+                """SELECT title, body, created_at, updated_at
+                FROM journal_entries WHERE day_id = ? ORDER BY created_at""",
+                (day_id),
             ).fetchall()
 
             data.append(
@@ -54,6 +61,15 @@ class IOService:
                         for t in tasks
                     ],
                     "habits": {h["name"]: bool(h["done"]) for h in habits},
+                    "journal_entries": [
+                        {
+                            "title": j.title,
+                            "body": j.body,
+                            "created_at": j.created_at,
+                            "updated_at": j.updated_at,
+                        }
+                        for j in journal_entries
+                    ],
                 }
             )
 
@@ -76,6 +92,9 @@ class IOService:
             "habit_log": [
                 dict(r) for r in conn.execute("SELECT * FROM habit_log").fetchall()
             ],
+            "journal_entries": [
+                dict(r) for r in conn.execute("SELECT * FROM journal_entries").fetchall
+            ],
         }
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, default=str)
@@ -93,6 +112,7 @@ class IOService:
         conn.execute("DELETE FROM tasks")
         conn.execute("DELETE FROM days")
         conn.execute("DELETE FROM habits")
+        conn.execute("DELETE FROM journal_entries")
 
         conn.executemany(
             "INSERT INTO habits (id, name, active) VALUES (:id, :name, :active)",
@@ -115,5 +135,10 @@ class IOService:
         conn.executemany(
             "INSERT INTO habit_log (id, day_id, habit_id, done) VALUES (:id, :day_id, :habit_id, :done)",
             data.get("habit_log", []),
+        )
+        conn.executemany(
+            """INSERT INTO journal_entries (id, day_id, title, body, created_at, updated_at)
+            VALUES (:id, :day_id, :title, :body, :created_at, :updated_at)""",
+            data.get("journal_entries", []),
         )
         conn.commit()

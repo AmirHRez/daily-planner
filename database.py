@@ -210,7 +210,7 @@ class DatabaseManager:
 
     def get_journal_entries(self, day_id: int) -> list[JournalEntry]:
         rows = self.conn.execute(
-            "SELECT * FROM journal_entries WHERE day_id = ? ORDER BY create_at",
+            "SELECT * FROM journal_entries WHERE day_id = ? ORDER BY created_at",
             (day_id,),
         ).fetchall()
         return [
