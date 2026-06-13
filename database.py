@@ -234,7 +234,7 @@ class DatabaseManager:
         row = self.conn.execute(
             "SELECT * FROM journal_entries WHERE id = ?", (cur.lastrowid,)
         ).fetchone()
-        return Task(
+        return JournalEntry(
             id=row["id"],
             day_id=row["day_id"],
             title=row["title"],

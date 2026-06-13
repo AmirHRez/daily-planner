@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from typing import Optional
 from database import DatabaseManager
-from models import Day, Task
+from models import Day, Task, JournalEntry
 
 
 class PlannerService:
@@ -82,10 +82,29 @@ class PlannerService:
             :3
         ]
 
+    # Journal
+
+    def add_journal_entry(
+        self, day_id: int, body: str, title: Optional[str] = None
+    ) -> JournalEntry:
+        return self._db.add_journal_entry(day_id, body, title)
+
+    def edit_journal_entry(self, entry_id: int, body: str, title: Optional[str]):
+        self._db.update_journal_entry(entry_id, title, body)
+
+    def delete_journal_entry(self, entry_id: int):
+        self._db.delete_journal_entry(entry_id)
+
+    def get_journal(self, day_id: int) -> list[JournalEntry]:
+        return self._db.get_journal_entries(day_id)
+
     # Habits
 
     def toggle_habit(self, day_id: int, habit_id: int) -> bool:
         return self._db.toggle_habit(day_id, habit_id)
+
+    # TODO: Function to manipulate default habits
+    # def add_habit(habit: str):
 
     # Stats
 
