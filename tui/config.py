@@ -7,6 +7,7 @@ THEME = Theme(
         "ink.faint": "#A8A29E",
         "rust": "#C0392B",
         "rust.bold": "bold #C0392B",
+        "title.journal": "bold #78716C",
         "gold": "#B7791F",
         "done": "strike #A8A29E",
         "undone": "#5F5B59",
@@ -29,6 +30,7 @@ THEME = Theme(
         "mode.today": "bold white on #166534",
         "mode.reflect": "bold #1C1917 on #B7791F",
         "mode.history": "bold #1C1917 on #A8A29E",
+        "mode.journal": "bold white on #44403C",
     }
 )
 

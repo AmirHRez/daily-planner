@@ -60,6 +60,28 @@ def run():
                 if picked:
                     current_date = picked
 
+            elif k == "j":
+                while True:
+                    day = service.get_or_create_day(current_date)
+                    screens.journal(day, current_date)
+                    console.print()
+                    try:
+                        jkey = Prompt.ask("  [prompt]>[/]", default="").strip()
+                    except (KeyboardInterrupt, EOFError):
+                        break
+                    jk = jkey.lower()
+                    if jk in ("b", "back", "q", ""):
+                        break
+                    elif jk == "n":
+                        actions.new_journal_entry(day)
+                    elif jk.startswith("e"):
+                        actions.edit_journal_entry(day.journal_entries, jkey[1:])
+                    elif jk.startswith("x"):
+                        actions.delete_journal_entry(day.journal_entries, jkey[1:])
+                    else:
+                        console.print(f"  [muted]Unknown command: {jk!r}[/]")
+                        time.sleep(0.5)
+
             # import / export  (capital X = export, capital I = import/restore)
             elif key == "X":
                 io_service.export_json()

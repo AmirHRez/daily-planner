@@ -34,12 +34,14 @@ def mode_badge(m: str) -> Text:
         "today": "  TODAY  ",
         "reflect": "  REFLECT  ",
         "history": "  HISTORY  ",
+        "journal": "  JOURNAL  ",
     }
     styles = {
         "plan": "mode.plan",
         "today": "mode.today",
         "reflect": "mode.reflect",
         "history": "mode.history",
+        "journal": "mode.journal",
     }
     return Text(labels.get(m, m.upper()), style=styles.get(m, ""))
 
@@ -160,6 +162,31 @@ def panel_reflection(day: Day) -> Panel:
     )
 
 
+def panel_journal(day: Day) -> Panel:
+    if not day.journal_entries:
+        content = Text("  No journal entries yet.", style="muted")
+    else:
+        rows = []
+        for i, e in enumerate(day.journal_entries, 1):
+            time_ = (e.created_at or "").split(" ")[-1][:5]
+            header = Text(f"  {i}.  ", style="muted")
+            if e.title:
+                header.append(Text(e.title, style="bold"))
+                header.append(Text(f"   {time_}", style="muted"))
+            else:
+                header.append(Text(time_, style="muted"))
+            rows.append(header)
+            rows.append(Text(f"      {e.body}", style="ink.light"))
+            rows.append(Text(""))
+        content = Text("\n").join(rows)
+    return Panel(
+        content,
+        title=Text(f"  JOURNAL  ({len(day.journal_entries)})  ", style="title.journal"),
+        border_style="#D6D3D1",
+        padding=(1, 2),
+    )
+
+
 # Header
 def render_header(console: Console, current_date: date, mode: str) -> None:
     today = date.today()
@@ -182,7 +209,7 @@ def render_header(console: Console, current_date: date, mode: str) -> None:
         rel = Text(f"  {delta:+}d", style="muted")
 
     nav = Text(
-        "b/← prev   n/→ next   t today   H history   X export   I import   q quit",
+        "b/← prev   n/→ next   t today   H history   X export   I import   q quit   j Journal",
         style="muted",
     )
     console.print()

@@ -18,6 +18,7 @@ from tui.components import (
     panel_tasks,
     panel_top3,
     render_header,
+    panel_journal,
 )
 
 
@@ -99,6 +100,13 @@ class ScreenManager:
             ("d", "done task"),
             ("h", "habit"),
         )
+
+    def journal(self, day: Day, current_date: date) -> None:
+        self._clr()
+        render_header(self._c, current_date, "journal")
+        self._c.print(panel_journal(day))
+        self._c.print()
+        self._cmd_bar(("n", "new"), ("e#", "edit"), ("x#", "delete"), ("b", "back"))
 
     def history_view(self, day: Day, current_date: date) -> None:
         self._clr()
