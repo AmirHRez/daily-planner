@@ -200,11 +200,10 @@ class ActionHandler:
     def new_journal_entry(self, day: Day) -> None:
         self._c.print()
         self._divider("NEW JOURNAL ENTRY")
-        title = Prompt.ask("  [prompt]Title (optional)[/]", default="").strip() or None
-        body = Prompt.ask("  [prompt]Entry[/]").strip()
+        body = Prompt.ask("  [prompt]What's going on?[/]").strip()
         if not body:
             return
-        self._svc.add_journal_entry(day.id, body, title)
+        self._svc.add_journal_entry(day.id, body)
         self._c.print("  [success]✓ Entry added.[/]")
         self._pause()
 
@@ -217,15 +216,12 @@ class ActionHandler:
             return
         self._c.print()
         self._divider("EDIT JOURNAL ENTRY")
-        title = (
-            Prompt.ask("  [prompt]Title[/]", default=entry.title or "").strip() or None
-        )
-        body = Prompt.ask("  [prompt]Entry[/]", default=entry.body).strip()
+        body = Prompt.ask("  [prompt]What changed?[/]", default=entry.body).strip()
         if not body:
             self._c.print("  [danger]Entry cannot be empty.[/]")
             self._pause()
             return
-        self._svc.edit_journal_entry(entry.id, body, title)
+        self._svc.edit_journal_entry(entry.id, body)
         self._c.print("  [success]✓ Updated.[/]")
         self._pause()
 
@@ -236,8 +232,7 @@ class ActionHandler:
             self._c.print("  [danger]Invalid.[/]")
             self._pause()
             return
-        label = entry.title or entry.body[:30]
-        if Confirm.ask(f'  [danger]Delete entry[/] "{label}"?', default=False):
+        if Confirm.ask(f'  [danger]Delete entry[/] "{idx}"?', default=False):
             self._svc.delete_journal_entry(entry.id)
             self._c.print("  [success]✓ Deleted.[/]")
         self._pause()

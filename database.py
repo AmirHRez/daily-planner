@@ -217,7 +217,6 @@ class DatabaseManager:
             JournalEntry(
                 id=row["id"],
                 day_id=row["day_id"],
-                title=row["title"],
                 body=row["body"],
                 created_at=row["created_at"],
                 updated_at=row["updated_at"],
@@ -225,10 +224,10 @@ class DatabaseManager:
             for row in rows
         ]
 
-    def add_journal_entry(self, day_id: int, body: str, title: Optional[str] = None):
+    def add_journal_entry(self, day_id: int, body: str):
         cur = self.conn.execute(
-            "INSERT INTO journal_entries (day_id, title, body) VALUES (?, ?, ?)",
-            (day_id, title, body),
+            "INSERT INTO journal_entries (day_id, body) VALUES (?, ?)",
+            (day_id, body),
         )
         self.conn.commit()
         row = self.conn.execute(
@@ -237,17 +236,16 @@ class DatabaseManager:
         return JournalEntry(
             id=row["id"],
             day_id=row["day_id"],
-            title=row["title"],
             body=row["body"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
 
-    def update_journal_entry(self, entry_id: int, title: Optional[str], body: str):
+    def update_journal_entry(self, entry_id: int, body: str):
         self.conn.execute(
-            """UPDATE journal_entries SET title = ?, body = ?,
+            """UPDATE journal_entries SET body = ?,
             updated_at = CURRENT_TIMESTAMP WHERE id = ?""",
-            (title, body, entry_id),
+            (body, entry_id),
         )
         self.conn.commit()
 

@@ -37,9 +37,9 @@ class IOService:
             ).fetchall()
 
             journal_entries = conn.execute(
-                """SELECT title, body, created_at, updated_at
+                """SELECT body, created_at, updated_at
                 FROM journal_entries WHERE day_id = ? ORDER BY created_at""",
-                (day_id),
+                (day_id,),
             ).fetchall()
 
             data.append(
@@ -63,10 +63,9 @@ class IOService:
                     "habits": {h["name"]: bool(h["done"]) for h in habits},
                     "journal_entries": [
                         {
-                            "title": j.title,
-                            "body": j.body,
-                            "created_at": j.created_at,
-                            "updated_at": j.updated_at,
+                            "body": j["body"],
+                            "created_at": j["created_at"],
+                            "updated_at": j["updated_at"],
                         }
                         for j in journal_entries
                     ],
@@ -93,7 +92,7 @@ class IOService:
                 dict(r) for r in conn.execute("SELECT * FROM habit_log").fetchall()
             ],
             "journal_entries": [
-                dict(r) for r in conn.execute("SELECT * FROM journal_entries").fetchall
+                dict(r) for r in conn.execute("SELECT * FROM journal_entries").fetchall()
             ],
         }
         with open(out_path, "w", encoding="utf-8") as f:
@@ -137,8 +136,8 @@ class IOService:
             data.get("habit_log", []),
         )
         conn.executemany(
-            """INSERT INTO journal_entries (id, day_id, title, body, created_at, updated_at)
-            VALUES (:id, :day_id, :title, :body, :created_at, :updated_at)""",
+            """INSERT INTO journal_entries (id, day_id, body, created_at, updated_at)
+            VALUES (:id, :day_id, :body, :created_at, :updated_at)""",
             data.get("journal_entries", []),
         )
         conn.commit()

@@ -36,7 +36,6 @@ class Task:
 class JournalEntry:
     id: int
     day_id: int
-    title: Optional[str]
     body: str
     created_at: Optional[str] = None
     updated_at: Optional[str] = None

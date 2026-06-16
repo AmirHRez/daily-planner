@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
+from rich.prompt import Prompt
 from rich.text import Text
 from models import Day
 from planner_services import PlannerService
@@ -132,8 +133,6 @@ class ScreenManager:
             Rule("  HISTORY — last 30 days  ", style="#D6D3D1", characters="═")
         )
         self._c.print()
-
-        from rich.prompt import Prompt
 
         today = date.today()
         entries = self._svc.recent_days(30)

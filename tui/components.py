@@ -170,11 +170,7 @@ def panel_journal(day: Day) -> Panel:
         for i, e in enumerate(day.journal_entries, 1):
             time_ = (e.created_at or "").split(" ")[-1][:5]
             header = Text(f"  {i}.  ", style="muted")
-            if e.title:
-                header.append(Text(e.title, style="bold"))
-                header.append(Text(f"   {time_}", style="muted"))
-            else:
-                header.append(Text(time_, style="muted"))
+            header.append(Text(time_, style="muted"))
             rows.append(header)
             rows.append(Text(f"      {e.body}", style="ink.light"))
             rows.append(Text(""))

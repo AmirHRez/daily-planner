@@ -85,12 +85,12 @@ class PlannerService:
     # Journal
 
     def add_journal_entry(
-        self, day_id: int, body: str, title: Optional[str] = None
+        self, day_id: int, body: str
     ) -> JournalEntry:
-        return self._db.add_journal_entry(day_id, body, title)
+        return self._db.add_journal_entry(day_id, body)
 
-    def edit_journal_entry(self, entry_id: int, body: str, title: Optional[str]):
-        self._db.update_journal_entry(entry_id, title, body)
+    def edit_journal_entry(self, entry_id: int, body: str):
+        self._db.update_journal_entry(entry_id, body)
 
     def delete_journal_entry(self, entry_id: int):
         self._db.delete_journal_entry(entry_id)
